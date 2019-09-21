@@ -1,17 +1,59 @@
+# Smallpack
 
-# mockpack
+A simple TypeScript module bundler, inspired by [minipack](https://github.com/ronami/minipack) and [bundler](https://github.com/jackpopp/bundler)
 
-A mini JS bundler written in TypeScript
+## Features
 
-![Typescript Logo](https://github.com/remojansen/logo.ts/raw/master/stickers/dublin_typescript.png)
+- [x] Minimal dependency (only [the TypeScript Compiler API](https://github.com/Microsoft/TypeScript/wiki/Using-the-Compiler-API))
+- [x] Type check
+- [x] Bundle TypeScript modules (only ECMAScript Modules)
+- [x] Remove duplication for the same module
+- [x] Resolve circular dependency
+- [x] `node_modules` resolution
 
+## Install
 
+### Install globally with npm
+
+```shell
+npm install -g @cacheflow/Smallpack
+```
+
+Run with `Smallpack`.
+
+### Manual install from source
+
+```shell
+git clone https://github.com/cacheflow/Smallpack.git
+cd Smallpack
+yarn # or `npm i` should work too
+```
+
+Run `bin/Smallpack` in the project root.
+
+## How to use
+
+```shell
+Smallpack path/to/entry.ts
+```
+
+### Play with [examples](examples)
+
+```shell
+Smallpack examples/01-simple # stdout
+Smallpack examples/01-simple | node # run
+```
+
+## How does it work?
+
+Use [the code](src/Smallpack.ts), Luke!
+
+## References
+
+- [Minipack](https://github.com/ronami/minipack): A simplified example of a
+  modern module bundler written in JavaScript
+- [The TypeScript Compiler API](https://github.com/Microsoft/TypeScript/wiki/Using-the-Compiler-API)
 
 ## License
-Pls do not use in production in the place of Parcel or Webpack. 🙏🏽 
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+[MIT](LICENSE)

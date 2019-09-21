@@ -1,20 +1,33 @@
-import { resolve } from "dns";
 
+import { readFileSync } from 'fs';
 const path = require('path');
-const fs = require('fs');
 const babylon = require('babylon');
+import * as ts from 'typescript';
 
-const bundle  = (filename: string) => {
-  console.log(' process is ', process.cwd())
-  // const resolvedPath = path.resolvedPath(filename)
-  // console.log('resolvedPath is ', resolvedPath)
-  // const fileContent = fs.readFileSync(filename, 'utf-8');
+let fileName = './sample/hello.ts';
 
-  // const ast = babylon.parse(fileContent, {
-  //   sourceType: 'module',
-  // })
+class DependencyGraph {
+  constructor() {
 
-  // console.log('ast is ', ast)
+  }
 }
 
-bundle('../sample/hello')
+
+const sourceFile = ts.createSourceFile(
+  fileName,
+  readFileSync(fileName).toString(),
+  ts.ScriptTarget.ES2015,
+    /*setParentNodes */ true
+);
+
+const walk =  (node: ts.Node): any => {
+  switch(node.kind) {
+    case ts.SyntaxKind.ImportDeclaration:
+      console.log("node is ", node)
+  }
+  ts.forEachChild(node, walk)
+}
+
+console.log('ast is ', walk(sourceFile))
+
+
