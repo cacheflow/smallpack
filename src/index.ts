@@ -7,10 +7,45 @@ import * as ts from 'typescript';
 let fileName = './sample/hello.ts';
 
 class DependencyGraph {
-  constructor() {
 
+  adjList: Map<any, Array<string>> = new Map();
+
+  constructor() {
+    this.adjList = new Map();
+  }
+
+  addVertex(vertex: string): void {
+    if (!this.adjList.has(vertex)) {
+      this.adjList.set(vertex, []);
+    } else {
+      throw "Vertex already exists"
+    }
+  }
+
+  addEdge(vertex: string, node: string): void {
+    if(this.adjList.has(vertex)) {
+      if(this.adjList.has(node)) {
+        let arr = this.adjList.get(vertex)
+        if(arr) {
+          if (!arr.includes(node)) {
+            arr.push(node)
+          } else {
+            throw `Can't add non-existing vertext -> ${node}`
+          }
+        }
+      }
+    }
+  }
+
+  print() {
+    console.log('list is ', this.adjList)
   }
 }
+
+let g = new DependencyGraph();
+
+
+g.print()
 
 
 const sourceFile = ts.createSourceFile(
@@ -23,7 +58,7 @@ const sourceFile = ts.createSourceFile(
 const walk =  (node: ts.Node): any => {
   switch(node.kind) {
     case ts.SyntaxKind.ImportDeclaration:
-      console.log("node is ", node)
+      console.log("node is ", node.parent)
   }
   ts.forEachChild(node, walk)
 }
