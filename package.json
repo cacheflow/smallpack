@@ -6,6 +6,7 @@
   "dependencies": {
     "@types/node": "^12.7.5",
     "babylon": "^6.18.0",
+    "md5": "^2.2.1",
     "typescript": "^3.6.3"
   }
 }

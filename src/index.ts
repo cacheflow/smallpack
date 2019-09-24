@@ -6,46 +6,62 @@ import * as ts from 'typescript';
 
 let fileName = './sample/hello.ts';
 
-class DependencyGraph {
-
-  adjList: Map<any, Array<string>> = new Map();
-
-  constructor() {
-    this.adjList = new Map();
-  }
-
-  addVertex(vertex: string): void {
-    if (!this.adjList.has(vertex)) {
-      this.adjList.set(vertex, []);
-    } else {
-      throw "Vertex already exists"
-    }
-  }
-
-  addEdge(vertex: string, node: string): void {
-    if(this.adjList.has(vertex)) {
-      if(this.adjList.has(node)) {
-        let arr = this.adjList.get(vertex)
-        if(arr) {
-          if (!arr.includes(node)) {
-            arr.push(node)
-          } else {
-            throw `Can't add non-existing vertext -> ${node}`
-          }
-        }
-      }
-    }
-  }
-
-  print() {
-    console.log('list is ', this.adjList)
-  }
+interface AdjList {
+  [key: string]: string[],
 }
 
-let g = new DependencyGraph();
+interface Ast extends ts.SourceFile {
+  ast: string
+}
+
+  class DependencyGraph {
+
+    adjList: AdjList = {}
+    ast = {};
+
+    constructor() {
+      this.adjList = {}
+      this.ast = {}
+    }
+
+    addParent(vertex: string): void {
+      const { adjList  } = this;
+      if( !(vertex in adjList)) {
+        adjList[vertex] = [];
+      }
+    }
+
+    addAst(ast: ts.SourceFile) {
+      if(Object.keys(this.ast).length >= 1) {
+        return;
+      }
+      this.ast = ast
+      console.log('ast is ', this.ast)
+    }
+
+    addDependency(vertex: string, node: string): void {
+      if(vertex in this.adjList) {
+        if (!(node in this.adjList[vertex])) {
+          this.adjList[vertex].push(node)
+        }
+        else {
+          "Parent already exists."
+        }
+      }
+      else {
+        throw "Parent does not exist"
+      }
+    }
+
+    print() {
+      console.log('list is ', this.adjList)
+    }
+  }
+
+  let g = new DependencyGraph();
 
 
-g.print()
+
 
 
 const sourceFile = ts.createSourceFile(
@@ -56,13 +72,25 @@ const sourceFile = ts.createSourceFile(
 );
 
 const walk =  (node: ts.Node): any => {
+  let sourceFile = node as ts.SourceFile
+  g.addAst(sourceFile)
   switch(node.kind) {
     case ts.SyntaxKind.ImportDeclaration:
-      console.log("node is ", node.parent)
+      const importDecl = node as ts.ImportDeclaration
+      const sourceFile = node as ts.SourceFile;
+      const fName = importDecl.getSourceFile().fileName;
+      g.addParent(fName)
+      g.addDependency(fName, importDecl.moduleSpecifier.getText().replace(/['"]/g, ''))
   }
   ts.forEachChild(node, walk)
 }
 
-console.log('ast is ', walk(sourceFile))
+
+
+
+console.log('walking ', walk(sourceFile))
+
+console.log('graph is ', g.print())
+
 
 
