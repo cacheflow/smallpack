@@ -3,10 +3,41 @@ import { readFileSync } from 'fs';
 const path = require('path');
 const babylon = require('babylon');
 import * as ts from 'typescript';
+const md5 = require('md5');
 
 let fileName = './sample/hello.ts';
 
-interface AdjList {
+
+class Queue {
+
+  data: Array<[]>
+
+  constructor() {
+    this.data = [];
+  }
+
+  enqueue = (record: any) => this.data.unshift(record);
+
+  dequeue = () => {
+    if(this.data.length >= 1) {
+      return this.data.pop()
+    }
+    throw new Error('Nothing to dequeue')
+  }
+
+  size = () => this.data.length;
+
+  first = () => this.data[0];
+
+  last = () => this.data[this.data.length - 1];
+
+  empty = () => this.data.length === 0;
+
+}
+
+
+
+interface D {
   [key: string]: string[],
 }
 
@@ -14,83 +45,88 @@ interface Ast extends ts.SourceFile {
   ast: string
 }
 
-  class DependencyGraph {
+  class Module {
 
-    adjList: AdjList = {}
-    ast = {};
+    ast: object = {}
+    id: string = ''
+    code!: string
+    fileName: string
+    dependencies: Record<any, any>
 
     constructor() {
-      this.adjList = {}
-      this.ast = {}
+      this.ast = {};
+      this.fileName = '';
+      this.code = '';
+      this.dependencies = new Map();
+      this.id = md5('');
     }
 
-    addParent(vertex: string): void {
-      const { adjList  } = this;
-      if( !(vertex in adjList)) {
-        adjList[vertex] = [];
-      }
-    }
 
-    addAst(ast: ts.SourceFile) {
+    public addAst(ast: ts.SourceFile) {
       if(Object.keys(this.ast).length >= 1) {
         return;
       }
       this.ast = ast
-      console.log('ast is ', this.ast)
     }
 
-    addDependency(vertex: string, node: string): void {
-      if(vertex in this.adjList) {
-        if (!(node in this.adjList[vertex])) {
-          this.adjList[vertex].push(node)
-        }
-        else {
-          "Parent already exists."
-        }
-      }
-      else {
-        throw "Parent does not exist"
-      }
+    public addFileName(fileName: string) {
+      this.fileName = fileName;
     }
 
-    print() {
-      console.log('list is ', this.adjList)
+    public addDependency(dependency: string): void {
+     if(!this.dependencies.has(dependency))  {
+        this.dependencies.set(dependency, dependency)
+     }
     }
   }
 
-  let g = new DependencyGraph();
+let module = new Module();
 
 
-
-
-
-const sourceFile = ts.createSourceFile(
-  fileName,
-  readFileSync(fileName).toString(),
-  ts.ScriptTarget.ES2015,
+const createSourceFileAst = (fileName: string) => {
+  const sourceFile = ts.createSourceFile(
+    fileName,
+    readFileSync(fileName).toString(),
+    ts.ScriptTarget.ES2015,
     /*setParentNodes */ true
-);
+  );
+  return sourceFile;
+}
+
+
+
 
 const walk =  (node: ts.Node): any => {
   let sourceFile = node as ts.SourceFile
-  g.addAst(sourceFile)
+  module.addAst(sourceFile)
   switch(node.kind) {
     case ts.SyntaxKind.ImportDeclaration:
       const importDecl = node as ts.ImportDeclaration
       const sourceFile = node as ts.SourceFile;
       const fName = importDecl.getSourceFile().fileName;
-      g.addParent(fName)
-      g.addDependency(fName, importDecl.moduleSpecifier.getText().replace(/['"]/g, ''))
+      module.addFileName(fName)
+      module.addDependency(importDecl.moduleSpecifier.getText().replace(/['"]/g, ''))
   }
   ts.forEachChild(node, walk)
 }
 
 
 
+const bundle = (module) => {
+  const queue = new Queue();
+  queue.enqueue(module);
 
-console.log('walking ', walk(sourceFile))
+  while(!queue.empty) {
 
-console.log('graph is ', g.print())
+  }
+}
+
+
+
+
+walk(createSourceFileAst(fileName))
+
+console.log('graph is ', module)
 
 
 
