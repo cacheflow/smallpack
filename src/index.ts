@@ -10,7 +10,7 @@ let fileName = './sample/hello.ts';
 
 class Queue {
 
-  data: Array<[]>
+  data: Array<Module>
 
   constructor() {
     this.data = [];
@@ -18,12 +18,7 @@ class Queue {
 
   enqueue = (record: any) => this.data.unshift(record);
 
-  dequeue = () => {
-    if(this.data.length >= 1) {
-      return this.data.pop()
-    }
-    throw new Error('Nothing to dequeue')
-  }
+  dequeue = (): Module | undefined => this.data.pop()
 
   size = () => this.data.length;
 
@@ -47,8 +42,8 @@ interface Ast extends ts.SourceFile {
 
   class Module {
 
-    ast: object = {}
-    id: string = ''
+    ast: object
+    id: string
     code!: string
     fileName: string
     dependencies: Record<any, any>
@@ -93,6 +88,9 @@ const createSourceFileAst = (fileName: string) => {
   return sourceFile;
 }
 
+const removeApostrophes = (data: string) => {
+  return data.replace(/['"]/g, "");
+}
 
 
 
@@ -105,19 +103,27 @@ const walk =  (node: ts.Node): any => {
       const sourceFile = node as ts.SourceFile;
       const fName = importDecl.getSourceFile().fileName;
       module.addFileName(fName)
-      module.addDependency(importDecl.moduleSpecifier.getText().replace(/['"]/g, ''))
+      module.addDependency(removeApostrophes(importDecl.moduleSpecifier.getText()))
   }
   ts.forEachChild(node, walk)
 }
 
 
 
-const bundle = (module) => {
+const bundle = (module: Module) => {
   const queue = new Queue();
   queue.enqueue(module);
 
-  while(!queue.empty) {
-
+  while(!queue.empty()) {
+    const data = queue.dequeue();
+    const queuedModule = data;
+    if(queuedModule) {
+      const fileNameDir = path.join(process.cwd(), path.dirname(queuedModule.fileName))
+      queuedModule.dependencies.forEach((dep: string) => {
+        const depAbsolutePath = path.join(fileNameDir, `${dep}.ts`)
+        const ast = createSourceFileAst(depAbsolutePath);
+      })
+    }
   }
 }
 
@@ -126,7 +132,9 @@ const bundle = (module) => {
 
 walk(createSourceFileAst(fileName))
 
-console.log('graph is ', module)
+
+bundle(module)
+
 
 
 
