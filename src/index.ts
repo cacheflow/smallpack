@@ -7,7 +7,7 @@ const md5 = require('md5');
 
 let fileName = './sample/hello.ts';
 
-
+//include minifier
 class Queue {
 
   data: Array<Module>
@@ -40,40 +40,42 @@ interface Ast extends ts.SourceFile {
   ast: string
 }
 
-  class Module {
+class Module {
 
-    ast: object
-    id: string
-    code!: string
-    fileName: string
-    dependencies: Record<any, any>
+  ast: object
+  id: string
+  code!: string
+  fileName: string
+  mapping: Record<string, string>
+  dependencies: Record<any, any>
 
-    constructor() {
-      this.ast = {};
-      this.fileName = '';
-      this.code = '';
-      this.dependencies = new Map();
-      this.id = md5('');
+  constructor() {
+    this.ast = {};
+    this.fileName = ''
+    this.mapping = {}
+    this.code = ''
+    this.dependencies = new Map()
+    this.id = md5('')
+  }
+
+
+  public addAst(ast: ts.SourceFile) {
+    if (Object.keys(this.ast).length >= 1) {
+      return;
     }
+    this.ast = ast
+  }
 
+  public addFileName(fileName: string) {
+    this.fileName = fileName;
+  }
 
-    public addAst(ast: ts.SourceFile) {
-      if(Object.keys(this.ast).length >= 1) {
-        return;
-      }
-      this.ast = ast
-    }
-
-    public addFileName(fileName: string) {
-      this.fileName = fileName;
-    }
-
-    public addDependency(dependency: string): void {
-     if(!this.dependencies.has(dependency))  {
-        this.dependencies.set(dependency, dependency)
-     }
+  public addDependency(dependency: string): void {
+    if (!this.dependencies.has(dependency)) {
+      this.dependencies.set(dependency, dependency)
     }
   }
+}
 
 let module = new Module();
 
@@ -94,10 +96,10 @@ const removeApostrophes = (data: string) => {
 
 
 
-const walk =  (node: ts.Node): any => {
+const walk = (node: ts.Node): any => {
   let sourceFile = node as ts.SourceFile
   module.addAst(sourceFile)
-  switch(node.kind) {
+  switch (node.kind) {
     case ts.SyntaxKind.ImportDeclaration:
       const importDecl = node as ts.ImportDeclaration
       const sourceFile = node as ts.SourceFile;
@@ -114,14 +116,15 @@ const bundle = (module: Module) => {
   const queue = new Queue();
   queue.enqueue(module);
 
-  while(!queue.empty()) {
+  while (!queue.empty()) {
     const data = queue.dequeue();
     const queuedModule = data;
-    if(queuedModule) {
+    if (queuedModule) {
       const fileNameDir = path.join(process.cwd(), path.dirname(queuedModule.fileName))
       queuedModule.dependencies.forEach((dep: string) => {
         const depAbsolutePath = path.join(fileNameDir, `${dep}.ts`)
-        const ast = createSourceFileAst(depAbsolutePath);
+        const child = createSourceFileAst(depAbsolutePath);
+        queuedModule.mapping[dep] = 
       })
     }
   }
