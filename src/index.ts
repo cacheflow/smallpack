@@ -32,9 +32,6 @@ class Queue {
 
 
 
-interface D {
-  [key: string]: string[],
-}
 
 interface Ast extends ts.SourceFile {
   ast: string
@@ -47,14 +44,14 @@ class Module {
   code!: string
   fileName: string
   mapping: Record<string, string>
-  dependencies: Record<any, any>
+  dependencies: Module[]
 
   constructor() {
     this.ast = {};
     this.fileName = ''
     this.mapping = {}
     this.code = ''
-    this.dependencies = new Map()
+    this.dependencies = []
     this.id = md5('')
   }
 
@@ -80,6 +77,36 @@ class Module {
 let module = new Module();
 
 
+class Transformer {
+
+  fileName: string
+  ast: object
+
+  constructor(fileName: string) {
+    this.fileName = "";
+    this.ast = {};
+  }
+
+  createAst() {
+    const { fileName } = this;
+    const ast = ts.createSourceFile(
+      fileName,
+      readFileSync(fileName).toString(),
+      ts.ScriptTarget.ES2015,
+      /*setParentNodes */ true
+    )
+    this.ast = ast;
+  }
+
+  getAst() {
+    if(this.ast) {
+      return this.ast;
+    }
+    throw new Error("No AST to be found.")
+  }
+}
+
+
 const createSourceFileAst = (fileName: string) => {
   const sourceFile = ts.createSourceFile(
     fileName,
@@ -93,6 +120,12 @@ const createSourceFileAst = (fileName: string) => {
 const removeApostrophes = (data: string) => {
   return data.replace(/['"]/g, "");
 }
+
+interface TraverserNode extends ts.Node {
+  traversorNodeId: string
+}
+
+
 
 
 
@@ -124,11 +157,72 @@ const bundle = (module: Module) => {
       queuedModule.dependencies.forEach((dep: string) => {
         const depAbsolutePath = path.join(fileNameDir, `${dep}.ts`)
         const child = createSourceFileAst(depAbsolutePath);
-        queuedModule.mapping[dep] = 
       })
     }
   }
 }
+
+class Transformer {
+
+  fileName: string
+  ast: object
+
+  constructor(fileName: string) {
+    this.fileName = "";
+    this.ast = {};
+  }
+
+  createAst() {
+    const { fileName } = this;
+    const ast = ts.createSourceFile(
+      fileName,
+      readFileSync(fileName).toString(),
+      ts.ScriptTarget.ES2015,
+      /*setParentNodes */ true
+    )
+    this.ast = ast;
+  }
+
+  getAst() {
+    if (this.ast) {
+      return this.ast;
+    }
+    throw new Error("No AST to be found.")
+  }
+}
+
+
+class Traverser {
+  readonly node: ts.Node
+  readonly module: Module
+
+  constructor(
+    node: ts.Node,
+    module: Module
+  ) {
+    this.node = node
+    this.module = module
+  }
+
+  walk(node: ts.Node): void {
+
+  }
+}
+
+const walk = (node: ts.Node): any => {
+  let sourceFile = node as ts.SourceFile
+  module.addAst(sourceFile)
+  switch (node.kind) {
+    case ts.SyntaxKind.ImportDeclaration:
+      const importDecl = node as ts.ImportDeclaration
+      const sourceFile = node as ts.SourceFile;
+      const fName = importDecl.getSourceFile().fileName;
+      module.addFileName(fName)
+      module.addDependency(removeApostrophes(importDecl.moduleSpecifier.getText()))
+  }
+  ts.forEachChild(node, walk)
+}
+
 
 
 
