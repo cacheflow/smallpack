@@ -44,14 +44,14 @@ class Module {
   code!: string
   fileName: string
   mapping: Record<string, string>
-  dependencies: Module[]
+  dependencies: Record<any, any>
 
   constructor() {
     this.ast = {};
     this.fileName = ''
     this.mapping = {}
     this.code = ''
-    this.dependencies = []
+    this.dependencies = new Map()
     this.id = md5('')
   }
 
@@ -154,74 +154,85 @@ const bundle = (module: Module) => {
     const queuedModule = data;
     if (queuedModule) {
       const fileNameDir = path.join(process.cwd(), path.dirname(queuedModule.fileName))
-      queuedModule.dependencies.forEach((dep: string) => {
+      queuedModule.dependencies.forEach((dep: Module) => {
         const depAbsolutePath = path.join(fileNameDir, `${dep}.ts`)
         const child = createSourceFileAst(depAbsolutePath);
+        console.log("child is ", child)
       })
     }
   }
 }
 
-class Transformer {
+// class Transformer {
 
-  fileName: string
-  ast: object
+//   fileName: string
+//   ast: object
 
-  constructor(fileName: string) {
-    this.fileName = "";
-    this.ast = {};
-  }
+//   constructor(fileName: string) {
+//     this.fileName = "";
+//     this.ast = {};
+//   }
 
-  createAst() {
-    const { fileName } = this;
-    const ast = ts.createSourceFile(
-      fileName,
-      readFileSync(fileName).toString(),
-      ts.ScriptTarget.ES2015,
-      /*setParentNodes */ true
-    )
-    this.ast = ast;
-  }
+//   createAst() {
+//     const { fileName } = this;
+//     const ast = ts.createSourceFile(
+//       fileName,
+//       readFileSync(fileName).toString(),
+//       ts.ScriptTarget.ES2015,
+//       /*setParentNodes */ true
+//     )
+//     this.ast = ast;
+//   }
 
-  getAst() {
-    if (this.ast) {
-      return this.ast;
-    }
-    throw new Error("No AST to be found.")
-  }
-}
+//   getAst() {
+//     if (this.ast) {
+//       return this.ast;
+//     }
+//     throw new Error("No AST to be found.")
+//   }
+// }
 
 
-class Traverser {
-  readonly node: ts.Node
-  readonly module: Module
+// class Traverser {
+//   readonly node: ts.Node
+//   readonly module: Module
 
-  constructor(
-    node: ts.Node,
-    module: Module
-  ) {
-    this.node = node
-    this.module = module
-  }
+//   constructor(
+//     node: ts.Node,
+//     module: Module
+//   ) {
+//     this.node = node
+//     this.module = module
+//   }
 
-  walk(node: ts.Node): void {
+//   walk(node: ts.Node): void {
+//     let sourceFile = node as ts.SourceFile
+//     module.addAst(sourceFile)
+//     switch (node.kind) {
+//       case ts.SyntaxKind.ImportDeclaration:
+//         const importDecl = node as ts.ImportDeclaration
+//         const sourceFile = node as ts.SourceFile;
+//         const fName = importDecl.getSourceFile().fileName;
+//         module.addFileName(fName)
+//         module.addDependency(removeApostrophes(importDecl.moduleSpecifier.getText()))
+//     }
+//     ts.forEachChild(node, walk)
+//   }
+// }
 
-  }
-}
-
-const walk = (node: ts.Node): any => {
-  let sourceFile = node as ts.SourceFile
-  module.addAst(sourceFile)
-  switch (node.kind) {
-    case ts.SyntaxKind.ImportDeclaration:
-      const importDecl = node as ts.ImportDeclaration
-      const sourceFile = node as ts.SourceFile;
-      const fName = importDecl.getSourceFile().fileName;
-      module.addFileName(fName)
-      module.addDependency(removeApostrophes(importDecl.moduleSpecifier.getText()))
-  }
-  ts.forEachChild(node, walk)
-}
+// const walk = (node: ts.Node): any => {
+//   let sourceFile = node as ts.SourceFile
+//   module.addAst(sourceFile)
+//   switch (node.kind) {
+//     case ts.SyntaxKind.ImportDeclaration:
+//       const importDecl = node as ts.ImportDeclaration
+//       const sourceFile = node as ts.SourceFile;
+//       const fName = importDecl.getSourceFile().fileName;
+//       module.addFileName(fName)
+//       module.addDependency(removeApostrophes(importDecl.moduleSpecifier.getText()))
+//   }
+//   ts.forEachChild(node, walk)
+// }
 
 
 
