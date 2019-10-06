@@ -157,7 +157,7 @@ const bundle = (module: Module) => {
       queuedModule.dependencies.forEach((dep: Module) => {
         const depAbsolutePath = path.join(fileNameDir, `${dep}.ts`)
         const child = createSourceFileAst(depAbsolutePath);
-        console.log("child is ", child)
+        console.log("child is now ", child)
       })
     }
   }
