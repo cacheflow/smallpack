@@ -2,4 +2,4 @@
 
 const random = () => console.log("I am random");
 
-export default randomBytes;
+export default random;

@@ -37,6 +37,23 @@ interface Ast extends ts.SourceFile {
   ast: string
 }
 
+
+const removeApostrophes = (data: string) => {
+  return data.replace(/['"]/g, "");
+}
+
+interface TraverserNode extends ts.Node {
+  traversorNodeId: string
+}
+
+const resolvePath = (data: string) => {
+  if(data.startsWith('/')) {
+    return path.join(path.dirname(data), data);
+  }
+  return data;
+}
+
+
 class Module {
 
   ast: object
@@ -64,48 +81,36 @@ class Module {
   }
 
   public addFileName(fileName: string) {
-    this.fileName = fileName;
+    this.fileName = resolvePath(fileName)
   }
 
   public addDependency(dependency: string): void {
     if (!this.dependencies.has(dependency)) {
+      const module = new Module()
+      //lets create another module in here
       this.dependencies.set(dependency, dependency)
     }
   }
 }
 
-let module = new Module();
 
 
-class Transformer {
+const module = new Module();
 
-  fileName: string
-  ast: object
 
-  constructor(fileName: string) {
-    this.fileName = "";
-    this.ast = {};
+const walk = (node: ts.Node): any => {
+  let sourceFile = node as ts.SourceFile
+  module.addAst(sourceFile)
+  switch (node.kind) {
+    case ts.SyntaxKind.ImportDeclaration:
+      const importDecl = node as ts.ImportDeclaration
+      const fName = importDecl.getSourceFile().fileName;
+      console.log("fName is ", fName)
+      module.addFileName(fName)
+      module.addDependency(removeApostrophes(importDecl.moduleSpecifier.getText()))
   }
-
-  createAst() {
-    const { fileName } = this;
-    const ast = ts.createSourceFile(
-      fileName,
-      readFileSync(fileName).toString(),
-      ts.ScriptTarget.ES2015,
-      /*setParentNodes */ true
-    )
-    this.ast = ast;
-  }
-
-  getAst() {
-    if(this.ast) {
-      return this.ast;
-    }
-    throw new Error("No AST to be found.")
-  }
+  ts.forEachChild(node, walk)
 }
-
 
 const createSourceFileAst = (fileName: string) => {
   const sourceFile = ts.createSourceFile(
@@ -117,131 +122,25 @@ const createSourceFileAst = (fileName: string) => {
   return sourceFile;
 }
 
-const removeApostrophes = (data: string) => {
-  return data.replace(/['"]/g, "");
-}
 
-interface TraverserNode extends ts.Node {
-  traversorNodeId: string
-}
-
-
-
-
-
-const walk = (node: ts.Node): any => {
-  let sourceFile = node as ts.SourceFile
-  module.addAst(sourceFile)
-  switch (node.kind) {
-    case ts.SyntaxKind.ImportDeclaration:
-      const importDecl = node as ts.ImportDeclaration
-      const sourceFile = node as ts.SourceFile;
-      const fName = importDecl.getSourceFile().fileName;
-      module.addFileName(fName)
-      module.addDependency(removeApostrophes(importDecl.moduleSpecifier.getText()))
-  }
-  ts.forEachChild(node, walk)
-}
-
-
-
-const bundle = (module: Module) => {
+const bundle = (fileName: string) => {
+  const ast = createSourceFileAst(fileName);
+  const res = walk(ast);
   const queue = new Queue();
   queue.enqueue(module);
-
-  while (!queue.empty()) {
-    const data = queue.dequeue();
-    const queuedModule = data;
-    if (queuedModule) {
-      const fileNameDir = path.join(process.cwd(), path.dirname(queuedModule.fileName))
-      queuedModule.dependencies.forEach((dep: Module) => {
-        const depAbsolutePath = path.join(fileNameDir, `${dep}.ts`)
-        const child = createSourceFileAst(depAbsolutePath);
-        console.log("child is now ", child)
-      })
+  while(!queue.empty()) {
+    const module = queue.dequeue();
+    if(module) {
+      const dirname = path.dirname(module.fileName);
+      
     }
   }
 }
 
-// class Transformer {
-
-//   fileName: string
-//   ast: object
-
-//   constructor(fileName: string) {
-//     this.fileName = "";
-//     this.ast = {};
-//   }
-
-//   createAst() {
-//     const { fileName } = this;
-//     const ast = ts.createSourceFile(
-//       fileName,
-//       readFileSync(fileName).toString(),
-//       ts.ScriptTarget.ES2015,
-//       /*setParentNodes */ true
-//     )
-//     this.ast = ast;
-//   }
-
-//   getAst() {
-//     if (this.ast) {
-//       return this.ast;
-//     }
-//     throw new Error("No AST to be found.")
-//   }
-// }
-
-
-// class Traverser {
-//   readonly node: ts.Node
-//   readonly module: Module
-
-//   constructor(
-//     node: ts.Node,
-//     module: Module
-//   ) {
-//     this.node = node
-//     this.module = module
-//   }
-
-//   walk(node: ts.Node): void {
-//     let sourceFile = node as ts.SourceFile
-//     module.addAst(sourceFile)
-//     switch (node.kind) {
-//       case ts.SyntaxKind.ImportDeclaration:
-//         const importDecl = node as ts.ImportDeclaration
-//         const sourceFile = node as ts.SourceFile;
-//         const fName = importDecl.getSourceFile().fileName;
-//         module.addFileName(fName)
-//         module.addDependency(removeApostrophes(importDecl.moduleSpecifier.getText()))
-//     }
-//     ts.forEachChild(node, walk)
-//   }
-// }
-
-// const walk = (node: ts.Node): any => {
-//   let sourceFile = node as ts.SourceFile
-//   module.addAst(sourceFile)
-//   switch (node.kind) {
-//     case ts.SyntaxKind.ImportDeclaration:
-//       const importDecl = node as ts.ImportDeclaration
-//       const sourceFile = node as ts.SourceFile;
-//       const fName = importDecl.getSourceFile().fileName;
-//       module.addFileName(fName)
-//       module.addDependency(removeApostrophes(importDecl.moduleSpecifier.getText()))
-//   }
-//   ts.forEachChild(node, walk)
-// }
 
 
 
-
-
-walk(createSourceFileAst(fileName))
-
-
-bundle(module)
+bundle(fileName)
 
 
 
