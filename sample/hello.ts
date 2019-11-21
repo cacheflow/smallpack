@@ -1,6 +1,5 @@
 import world from './world';
-import random from './random';
 
-const hello = () => `hello ${world()} ${random()}`;
+const hello = () => `hello ${world()}`;
 
 export default hello;
