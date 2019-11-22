@@ -1,68 +1,67 @@
-(function (modules) {
-	function require(id) {
-		const [fn, mapping] = modules[id];
-		console.log('modules is ', modules)
-		function localRequire(name) {
-			console.log('name is ', name)
-			return require(mapping[name]);
-		}
+ (function (modules) {
+ 	function require(id) {
+ 		const [fn, mapping] = modules[id];
 
-		const module = {
-			exports: {}
-		};
+ 		function localRequire(name) {
+ 			return require(mapping[name]);
+ 		}
 
-		fn(localRequire, module, module.exports);
+ 		const module = {
+ 			exports: {}
+ 		};
 
-		return module.exports;
-	}
+ 		fn(localRequire, module, module.exports);
 
-	require(0);
-})({
-	0: [
-		function (require, module, exports) {
-			"use strict";
+ 		return module.exports;
+ 	}
 
-			var _message = require("./message.js");
+ 	require(0);
+ })({
+ 	0: [
+ 		function (require, module, exports) {
+ 			"use strict";
 
-			var _message2 = _interopRequireDefault(_message);
+ 			var _message = require("./message.js");
 
-			function _interopRequireDefault(obj) {
-				return obj && obj.__esModule ? obj : {
-					default: obj
-				};
-			}
+ 			var _message2 = _interopRequireDefault(_message);
 
-			console.log(_message2.default);
-		},
-		{
-			"./message.js": 1
-		},
-	],
-	1: [
-		function (require, module, exports) {
-			"use strict";
+ 			function _interopRequireDefault(obj) {
+ 				return obj && obj.__esModule ? obj : {
+ 					default: obj
+ 				};
+ 			}
 
-			Object.defineProperty(exports, "__esModule", {
-				value: true
-			});
+ 			console.log(_message2.default);
+ 		},
+ 		{
+ 			"./message.js": 1
+ 		},
+ 	],
+ 	1: [
+ 		function (require, module, exports) {
+ 			"use strict";
 
-			var _name = require("./name.js");
+ 			Object.defineProperty(exports, "__esModule", {
+ 				value: true
+ 			});
 
-			exports.default = "hello " + _name.name + "!";
-		},
-		{
-			"./name.js": 2
-		},
-	],
-	2: [
-		function (require, module, exports) {
-			"use strict";
+ 			var _name = require("./name.js");
 
-			Object.defineProperty(exports, "__esModule", {
-				value: true
-			});
-			var name = exports.name = 'world';
-		},
-		{},
-	],
-})
+ 			exports.default = "hello " + _name.name + "!";
+ 		},
+ 		{
+ 			"./name.js": 2
+ 		},
+ 	],
+ 	2: [
+ 		function (require, module, exports) {
+ 			"use strict";
+
+ 			Object.defineProperty(exports, "__esModule", {
+ 				value: true
+ 			});
+ 			var name = exports.name = 'world';
+ 		},
+ 		{},
+ 	],
+ })

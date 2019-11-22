@@ -1,10 +1,8 @@
 const path = require('path');
-const babylon = require('babylon');
 import { readFileSync } from 'fs';
-const md5 = require('md5');
+const uuidv1 = require('uuid/v1');
 import * as ts from 'typescript';
-import { resolve } from 'path';
-let fileName = './sample/hello.ts';
+const Terser = require("terser");
 
 //include minifier
 class Queue {
@@ -30,19 +28,8 @@ class Queue {
 }
 
 
-
-
-interface Ast extends ts.SourceFile {
-  ast: string
-}
-
-
 const removeApostrophes = (data: string) => {
   return data.replace(/['"]/g, "");
-}
-
-interface TraverserNode extends ts.Node {
-  traversorNodeId: string
 }
 
 const resovledDependencyPath = (parentDir: string, depName: string) => {
@@ -57,6 +44,7 @@ const resolvePath = (data: string) => {
   return data;
 }
 
+let ID = 0;
 
 class Module {
 
@@ -73,7 +61,7 @@ class Module {
     this.mapping = {}
     this.code = ''
     this.dependencies = new Map()
-    this.id = md5('')
+    this.id = uuidv1()
   }
 
 
@@ -127,6 +115,8 @@ const getDependencies = (node: ts.SourceFile, module: Module): Module => {
   return module
 }
 
+let arr: Array<Module> = [];
+
 
 
 const walk = (node: ts.Node): Module => {
@@ -135,7 +125,6 @@ const walk = (node: ts.Node): Module => {
   module.addAst(sourceFile)
   module.addFileName(sourceFile.fileName)
   module.addCode(sourceFile.text);
-  console.log('fileName is ', sourceFile.fileName, module.id)
   const moduleWithDependencies = getDependencies(sourceFile, module)
   return moduleWithDependencies
 }
@@ -158,6 +147,7 @@ const buildModule = (fileName: string) => {
 
 
 
+const getBaseName = (fpath: string) => `./${path.basename(fpath, path.extname(fpath))}`;
 
 const bundle = (fileName: string) => {
   const module = buildModule(fileName);
@@ -165,7 +155,7 @@ const bundle = (fileName: string) => {
   queue.enqueue(module);
   module.dependencies.forEach((depPath: string) => {
     const child = buildModule(depPath);
-    module.mapping[depPath] = child.id
+    module.mapping[`${getBaseName(depPath)}`] = child.id
     queue.enqueue(child)
   })
   let modules = '';
@@ -177,8 +167,8 @@ const bundle = (fileName: string) => {
       if(!initId) {
         initId = mod.id;
       }
-
-      modules += `${mod.id}: [
+  
+      modules += `"${mod.id}": [
         function (require, module, exports) {
           ${mod.code}
         },
@@ -187,7 +177,7 @@ const bundle = (fileName: string) => {
     }
   }
 
-  // console.log('modules are ', modules)
+
 
   const result = `
     (function(modules) {
@@ -206,13 +196,16 @@ const bundle = (fileName: string) => {
       require("${initId}");
     })({${modules}})
   `;
-  return result;
+  return minify(result).code;
 }
 
+const minify = (code: string) => Terser.minify(code);
 
 
+const fileName = './sample/hello.ts';
 
-bundle(fileName)
+
+console.log(bundle(fileName))
 
 
 

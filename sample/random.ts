@@ -1,5 +1,5 @@
 
 
-const random = () => console.log("I am random");
+const random = () => "I am working"
 
 export default random;

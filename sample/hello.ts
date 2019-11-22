@@ -1,5 +1,6 @@
 import world from './world';
+import randrom from './random';
+const hello = () => `hello ${world()} ${randrom()}`;
 
-const hello = () => `hello ${world()}`;
-
+console.log(hello())
 export default hello;
