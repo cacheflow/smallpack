@@ -21,7 +21,7 @@ yarn run bundle
 
 ## How does it work?
 
-Use [the code](src/Smallpack.ts), Luke!
+Use [the code](src/index.ts), Luke!
 
 ## References
 
