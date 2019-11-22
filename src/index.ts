@@ -44,7 +44,6 @@ const resolvePath = (data: string) => {
   return data;
 }
 
-let ID = 0;
 
 class Module {
 
@@ -149,6 +148,8 @@ const buildModule = (fileName: string) => {
 
 const getBaseName = (fpath: string) => `./${path.basename(fpath, path.extname(fpath))}`;
 
+const minify = (code: string) => Terser.minify(code);
+
 const bundle = (fileName: string) => {
   const module = buildModule(fileName);
   const queue = new Queue();
@@ -199,7 +200,6 @@ const bundle = (fileName: string) => {
   return minify(result).code;
 }
 
-const minify = (code: string) => Terser.minify(code);
 
 
 const fileName = './sample/hello.ts';
