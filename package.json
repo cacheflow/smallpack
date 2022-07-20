@@ -10,7 +10,7 @@
     "@types/node": "^12.11.1",
     "babylon": "^6.18.0",
     "md5": "^2.2.1",
-    "terser": "^4.4.0",
+    "terser": "^4.8.1",
     "typescript": "^3.6.3",
     "uglify-js": "^3.6.9",
     "uuid": "^3.3.3"
